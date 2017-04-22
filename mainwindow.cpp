@@ -111,7 +111,7 @@ std::vector<int> MainWindow::getDifficultyRating(int n) {
 }
 
 void MainWindow::loadFiles() {
-    QFile inFile("E:\\Users\\Sean\\Documents\\Difficulties.txt");
+    QFile inFile("Difficulties.map");
     inFile.open(QIODevice::ReadOnly);
     QTextStream stream(&inFile);
     QString content;
