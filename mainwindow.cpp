@@ -74,7 +74,7 @@ void MainWindow::on_pushButton_Generate_clicked()
             content += generalMaps[i] + "\n";
         }
     }
-    ui->textBrowser->setText(content);
+    ui->textBrowser_Output->setText(content);
     if (speed || jump || general) {
         resize(527, 500);
     }
