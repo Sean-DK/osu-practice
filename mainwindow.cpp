@@ -6,14 +6,15 @@
 #include <QTextStream>
 #include <ctime>
 #include <QtGlobal>
+#include <QMenu>
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
 {
+    loadFiles();
     ui->setupUi(this);
     resize(527, 60);
-    loadFiles();
 }
 
 MainWindow::~MainWindow()
@@ -36,51 +37,75 @@ void MainWindow::on_pushButton_Generate_clicked()
             if (overallRating[index] >= ratingRange[0] && overallRating[index] <= ratingRange[1]) {
                 if (speed && speedRating[index] > overallRating[index] * 0.6 && speedFound < numOfMaps) {
                     if (std::find(speedMaps.begin(), speedMaps.end(), mapNames[index]) == speedMaps.end()) {
-                        speedMaps.push_back(mapNames[index]);
-                        speedFound++;
+                        if (!searchList(blacklist, mapNames[index])) {
+                            if (!searchList(greylist, mapNames[index])) {
+                                speedMaps.push_back(mapNames[index]);
+                                greylist.push_back(mapNames[index]);
+                                speedFound++;
+                            }
+                        }
                     }
                 }
                 else if (jump && jumpRating[index] > overallRating[index] * 0.5 && jumpFound < numOfMaps) {
                     if (std::find(jumpMaps.begin(), jumpMaps.end(), mapNames[index]) == jumpMaps.end()) {
-                        jumpMaps.push_back(mapNames[index]);
-                        jumpFound++;
+                        if (!searchList(blacklist, mapNames[index])) {
+                            if (!searchList(greylist, mapNames[index])) {
+                                jumpMaps.push_back(mapNames[index]);
+                                greylist.push_back(mapNames[index]);
+                                jumpFound++;
+                            }
+                        }
                     }
                 }
-                else if (general && generalFound < numOfMaps) {
+                else if (general && jumpRating[index] < overallRating[index] * 0.55 && speedRating[index] < overallRating[index] * 0.55 && generalFound < numOfMaps) {
                     if (std::find(generalMaps.begin(), generalMaps.end(), mapNames[index]) == generalMaps.end()) {
-                        generalMaps.push_back(mapNames[index]);
-                        generalFound++;
+                        if (!searchList(blacklist, mapNames[index])) {
+                            if (!searchList(greylist, mapNames[index])) {
+                                generalMaps.push_back(mapNames[index]);
+                                greylist.push_back(mapNames[index]);
+                                generalFound++;
+                            }
+                        }
                     }
                 }
             }
             if (++tries > 10000) break;
         } while ((speed && speedFound < numOfMaps) || (jump && jumpFound < numOfMaps) || (general && generalFound < numOfMaps));
     QString content;
+    int frameHeight = 70;
+    ui->frame_Speed->hide();
+    ui->frame_Jump->hide();
+    ui->frame_General->hide();
     if (speed) {
-        content += "\nSpeed:\n\n";
+        ui->listWidget_Speed->clear();
         for (int i = 0; i < speedMaps.size(); i++) {
-            content += speedMaps[i] + "\n";
+            ui->listWidget_Speed->addItem(speedMaps[i]);
         }
+        ui->frame_Speed->show();
+        ui->frame_Speed->setGeometry(10, frameHeight, 551, 141);
+        frameHeight += 140;
     }
     if (jump) {
-        content += "\nJump:\n\n";
+        ui->listWidget_Jump->clear();
         for (int i = 0; i < jumpMaps.size(); i++) {
-            content += jumpMaps[i] + "\n";
+            ui->listWidget_Jump->addItem(jumpMaps[i]);
         }
+        ui->frame_Jump->show();
+        ui->frame_Jump->setGeometry(10, frameHeight, 551, 141);
+        frameHeight += 140;
     }
     if (general) {
-        content += "\nGeneral:\n\n";
+        ui->listWidget_General->clear();
         for (int i = 0; i < generalMaps.size(); i++) {
-            content += generalMaps[i] + "\n";
+           ui->listWidget_General->addItem(generalMaps[i]);
         }
+        ui->frame_General->show();
+        ui->frame_General->setGeometry(10, frameHeight, 551, 141);
     }
-    ui->textBrowser_Output->setText(content);
-    if (speed || jump || general) {
-        resize(527, 500);
-    }
-    else {
-        resize(527, 60);
-    }
+    if (speed && jump && general) resize(527, 500);
+    else if ((speed && jump)|| (speed && general) || (jump && general)) resize(527, 360);
+    else if (speed || jump || general) resize(527, 220);
+    else resize(527, 60);
 }
 
 std::vector<int> MainWindow::getDifficultyRating(int n) {
@@ -110,8 +135,16 @@ std::vector<int> MainWindow::getDifficultyRating(int n) {
     return range;
 }
 
+bool MainWindow::searchList(std::vector<QString> list, QString str){
+    for (int i = 0; i < list.size(); i++) {
+        if (list[i] == str)
+            return true;
+    }
+    return false;
+}
+
 void MainWindow::loadFiles() {
-    QFile inFile("Difficulties.map");
+    QFile inFile("E:\\Users\\Sean\\Documents\\osu! Map Picker\\Difficulties.map");
     inFile.open(QIODevice::ReadOnly);
     QTextStream stream(&inFile);
     QString content;
@@ -128,5 +161,88 @@ void MainWindow::loadFiles() {
             content = stream.readLine();
         }
         inFile.close();
+    }
+
+    inFile.setFileName("E:\\Users\\Sean\\Documents\\osu! Map Picker\\Blacklist.map");
+    inFile.open(QIODevice::ReadOnly);
+    if (inFile.isOpen()) {
+        content = stream.readLine();
+        while (content != NULL) {
+            blacklist.push_back(content);
+            content = stream.readLine();
+        }
+        inFile.close();
+    }
+}
+
+void MainWindow::on_listWidget_Speed_customContextMenuRequested(const QPoint &pos)
+{
+    QMenu contextMenu(tr("Context Menu"), this);
+    QAction blacklistItem("Blacklist", this);
+    connect(&blacklistItem, SIGNAL(triggered()), this, SLOT(listWidget_Speed_blacklistItem()));
+    contextMenu.addAction(&blacklistItem);
+    contextMenu.exec(QCursor::pos());
+}
+
+void MainWindow::listWidget_Speed_blacklistItem() {
+    if (!searchList(blacklist, ui->listWidget_Speed->currentItem()->text())) {
+        blacklist.push_back(ui->listWidget_Speed->currentItem()->text());
+    }
+    QFile outFile("E:\\Users\\Sean\\Documents\\osu! Map Picker\\Blacklist.map");
+    outFile.open(QIODevice::WriteOnly);
+    if (outFile.isOpen()) {
+        QString content;
+        for (int i = 0; i < blacklist.size(); i++)
+            content += blacklist[i] + "\n";
+        QTextStream stream(&outFile);
+        stream << content;
+    }
+}
+
+void MainWindow::on_listWidget_Jump_customContextMenuRequested(const QPoint &pos)
+{
+    QMenu contextMenu(tr("Context Menu"), this);
+    QAction blacklistItem("Blacklist", this);
+    connect(&blacklistItem, SIGNAL(triggered()), this, SLOT(listWidget_Jump_blacklistItem()));
+    contextMenu.addAction(&blacklistItem);
+    contextMenu.exec(QCursor::pos());
+}
+
+void MainWindow::listWidget_Jump_blacklistItem() {
+    if (!searchList(blacklist, ui->listWidget_Jump->currentItem()->text())) {
+        blacklist.push_back(ui->listWidget_Jump->currentItem()->text());
+    }
+    QFile outFile("E:\\Users\\Sean\\Documents\\osu! Map Picker\\Blacklist.map");
+    outFile.open(QIODevice::WriteOnly);
+    if (outFile.isOpen()) {
+        QString content;
+        for (int i = 0; i < blacklist.size(); i++)
+            content += blacklist[i] + "\n";
+        QTextStream stream(&outFile);
+        stream << content;
+    }
+}
+
+void MainWindow::on_listWidget_General_customContextMenuRequested(const QPoint &pos)
+{
+    QMenu contextMenu(tr("Context Menu"), this);
+    QAction blacklistItem("Blacklist", this);
+    connect(&blacklistItem, SIGNAL(triggered()), this, SLOT(listWidget_General_blacklistItem()));
+    contextMenu.addAction(&blacklistItem);
+    contextMenu.exec(QCursor::pos());
+}
+
+void MainWindow::listWidget_General_blacklistItem() {
+    if (!searchList(blacklist, ui->listWidget_General->currentItem()->text())) {
+        blacklist.push_back(ui->listWidget_General->currentItem()->text());
+    }
+    QFile outFile("E:\\Users\\Sean\\Documents\\osu! Map Picker\\Blacklist.map");
+    outFile.open(QIODevice::WriteOnly);
+    if (outFile.isOpen()) {
+        QString content;
+        for (int i = 0; i < blacklist.size(); i++)
+            content += blacklist[i] + "\n";
+        QTextStream stream(&outFile);
+        stream << content;
     }
 }
