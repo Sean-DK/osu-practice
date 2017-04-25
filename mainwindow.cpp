@@ -7,6 +7,7 @@
 #include <ctime>
 #include <QtGlobal>
 #include <QMenu>
+#include <QClipboard>
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -143,8 +144,16 @@ bool MainWindow::searchList(std::vector<QString> list, QString str){
     return false;
 }
 
+int MainWindow::getIndex(std::vector<QString> list, QString str){
+    for (int i = 0; i < list.size(); i++) {
+        if (list[i] == str)
+            return i;
+    }
+    return 0;
+}
+
 void MainWindow::loadFiles() {
-    QFile inFile("E:\\Users\\Sean\\Documents\\osu! Map Picker\\Difficulties.map");
+    QFile inFile("Difficulties.map");
     inFile.open(QIODevice::ReadOnly);
     QTextStream stream(&inFile);
     QString content;
@@ -152,6 +161,8 @@ void MainWindow::loadFiles() {
         content = stream.readLine();
         while (content != NULL) {
             mapNames.push_back(content);
+            content = stream.readLine();
+            clipboardNames.push_back(content);
             content = stream.readLine();
             speedRating.push_back(content.toDouble());
             content = stream.readLine();
@@ -163,7 +174,7 @@ void MainWindow::loadFiles() {
         inFile.close();
     }
 
-    inFile.setFileName("E:\\Users\\Sean\\Documents\\osu! Map Picker\\Blacklist.map");
+    inFile.setFileName("Blacklist.map");
     inFile.open(QIODevice::ReadOnly);
     if (inFile.isOpen()) {
         content = stream.readLine();
@@ -181,6 +192,9 @@ void MainWindow::on_listWidget_Speed_customContextMenuRequested(const QPoint &po
     QAction blacklistItem("Blacklist", this);
     connect(&blacklistItem, SIGNAL(triggered()), this, SLOT(listWidget_Speed_blacklistItem()));
     contextMenu.addAction(&blacklistItem);
+    QAction copyToClipboard("Copy to clipboard", this);
+    connect(&copyToClipboard, SIGNAL(triggered()), this, SLOT(listWidget_Speed_copyToClipboard()));
+    contextMenu.addAction(&copyToClipboard);
     contextMenu.exec(QCursor::pos());
 }
 
@@ -188,7 +202,7 @@ void MainWindow::listWidget_Speed_blacklistItem() {
     if (!searchList(blacklist, ui->listWidget_Speed->currentItem()->text())) {
         blacklist.push_back(ui->listWidget_Speed->currentItem()->text());
     }
-    QFile outFile("E:\\Users\\Sean\\Documents\\osu! Map Picker\\Blacklist.map");
+    QFile outFile("Blacklist.map");
     outFile.open(QIODevice::WriteOnly);
     if (outFile.isOpen()) {
         QString content;
@@ -197,6 +211,12 @@ void MainWindow::listWidget_Speed_blacklistItem() {
         QTextStream stream(&outFile);
         stream << content;
     }
+}
+
+void MainWindow::listWidget_Speed_copyToClipboard() {
+    int index = getIndex(mapNames, ui->listWidget_Speed->currentItem()->text());
+    QClipboard *clipboard = QGuiApplication::clipboard();
+    clipboard->setText(clipboardNames[index], QClipboard::Clipboard);
 }
 
 void MainWindow::on_listWidget_Jump_customContextMenuRequested(const QPoint &pos)
@@ -205,6 +225,9 @@ void MainWindow::on_listWidget_Jump_customContextMenuRequested(const QPoint &pos
     QAction blacklistItem("Blacklist", this);
     connect(&blacklistItem, SIGNAL(triggered()), this, SLOT(listWidget_Jump_blacklistItem()));
     contextMenu.addAction(&blacklistItem);
+    QAction copyToClipboard("Copy to clipboard", this);
+    connect(&copyToClipboard, SIGNAL(triggered()), this, SLOT(listWidget_Jump_copyToClipboard()));
+    contextMenu.addAction(&copyToClipboard);
     contextMenu.exec(QCursor::pos());
 }
 
@@ -212,7 +235,7 @@ void MainWindow::listWidget_Jump_blacklistItem() {
     if (!searchList(blacklist, ui->listWidget_Jump->currentItem()->text())) {
         blacklist.push_back(ui->listWidget_Jump->currentItem()->text());
     }
-    QFile outFile("E:\\Users\\Sean\\Documents\\osu! Map Picker\\Blacklist.map");
+    QFile outFile("Blacklist.map");
     outFile.open(QIODevice::WriteOnly);
     if (outFile.isOpen()) {
         QString content;
@@ -221,6 +244,12 @@ void MainWindow::listWidget_Jump_blacklistItem() {
         QTextStream stream(&outFile);
         stream << content;
     }
+}
+
+void MainWindow::listWidget_Jump_copyToClipboard() {
+    int index = getIndex(mapNames, ui->listWidget_Jump->currentItem()->text());
+    QClipboard *clipboard = QGuiApplication::clipboard();
+    clipboard->setText(clipboardNames[index], QClipboard::Clipboard);
 }
 
 void MainWindow::on_listWidget_General_customContextMenuRequested(const QPoint &pos)
@@ -229,6 +258,9 @@ void MainWindow::on_listWidget_General_customContextMenuRequested(const QPoint &
     QAction blacklistItem("Blacklist", this);
     connect(&blacklistItem, SIGNAL(triggered()), this, SLOT(listWidget_General_blacklistItem()));
     contextMenu.addAction(&blacklistItem);
+    QAction copyToClipboard("Copy to clipboard", this);
+    connect(&copyToClipboard, SIGNAL(triggered()), this, SLOT(listWidget_General_copyToClipboard()));
+    contextMenu.addAction(&copyToClipboard);
     contextMenu.exec(QCursor::pos());
 }
 
@@ -236,7 +268,7 @@ void MainWindow::listWidget_General_blacklistItem() {
     if (!searchList(blacklist, ui->listWidget_General->currentItem()->text())) {
         blacklist.push_back(ui->listWidget_General->currentItem()->text());
     }
-    QFile outFile("E:\\Users\\Sean\\Documents\\osu! Map Picker\\Blacklist.map");
+    QFile outFile("Blacklist.map");
     outFile.open(QIODevice::WriteOnly);
     if (outFile.isOpen()) {
         QString content;
@@ -245,4 +277,10 @@ void MainWindow::listWidget_General_blacklistItem() {
         QTextStream stream(&outFile);
         stream << content;
     }
+}
+
+void MainWindow::listWidget_General_copyToClipboard() {
+    int index = getIndex(mapNames, ui->listWidget_General->currentItem()->text());
+    QClipboard *clipboard = QGuiApplication::clipboard();
+    clipboard->setText(clipboardNames[index], QClipboard::Clipboard);
 }
