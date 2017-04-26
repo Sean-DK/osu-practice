@@ -153,7 +153,7 @@ int MainWindow::getIndex(std::vector<QString> list, QString str){
 }
 
 void MainWindow::loadFiles() {
-    QFile inFile("Difficulties.map");
+    QFile inFile("E:\\Users\\Sean\\Documents\\osu! Map Picker\\Difficulties.map");
     inFile.open(QIODevice::ReadOnly);
     QTextStream stream(&inFile);
     QString content;
@@ -174,7 +174,7 @@ void MainWindow::loadFiles() {
         inFile.close();
     }
 
-    inFile.setFileName("Blacklist.map");
+    inFile.setFileName("E:\\Users\\Sean\\Documents\\osu! Map Picker\\Blacklist.map");
     inFile.open(QIODevice::ReadOnly);
     if (inFile.isOpen()) {
         content = stream.readLine();
@@ -188,6 +188,8 @@ void MainWindow::loadFiles() {
 
 void MainWindow::on_listWidget_Speed_customContextMenuRequested(const QPoint &pos)
 {
+    ui->listWidget_Jump->clearSelection();
+    ui->listWidget_General->clearSelection();
     QMenu contextMenu(tr("Context Menu"), this);
     QAction blacklistItem("Blacklist", this);
     connect(&blacklistItem, SIGNAL(triggered()), this, SLOT(listWidget_Speed_blacklistItem()));
@@ -221,6 +223,8 @@ void MainWindow::listWidget_Speed_copyToClipboard() {
 
 void MainWindow::on_listWidget_Jump_customContextMenuRequested(const QPoint &pos)
 {
+    ui->listWidget_Speed->clearSelection();
+    ui->listWidget_General->clearSelection();
     QMenu contextMenu(tr("Context Menu"), this);
     QAction blacklistItem("Blacklist", this);
     connect(&blacklistItem, SIGNAL(triggered()), this, SLOT(listWidget_Jump_blacklistItem()));
@@ -254,6 +258,8 @@ void MainWindow::listWidget_Jump_copyToClipboard() {
 
 void MainWindow::on_listWidget_General_customContextMenuRequested(const QPoint &pos)
 {
+    ui->listWidget_Speed->clearSelection();
+    ui->listWidget_Jump->clearSelection();
     QMenu contextMenu(tr("Context Menu"), this);
     QAction blacklistItem("Blacklist", this);
     connect(&blacklistItem, SIGNAL(triggered()), this, SLOT(listWidget_General_blacklistItem()));
